@@ -1,0 +1,180 @@
+import string
+import random
+import nltk
+#import for chatbot
+
+from datetime import date
+from datetime import datetime
+#imports date and time info
+
+import requests
+#imports weather data
+
+counter = 0
+# to give us more versitility with the chatbot function input order
+
+entry = []
+#list to be used to add schedule
+
+
+class my_schedule():
+    #class of dictionary for storing schedule items
+    # __init__ function 
+    def __init__(self): 
+        self.schedule = dict()
+          
+    # Function to add key:value 
+    def add(self, key, value): 
+        self.schedule[key] = value 
+    
+
+def is_weather(input_string):
+    #checks if the user would like to check the weather
+    if 'weather' in input_string:
+        return True
+    else:
+        return False
+    
+# defining a dictionary to be used
+sch = my_schedule()
+
+def is_schedule(input_string):
+    #checks if input is schedule
+    if 'schedule' in input_string:
+        return True
+    else:
+        return False
+        
+
+def is_add(input_string):
+    #checks if input is add
+    if 'add' in input_string:
+        return True
+    else:
+        return False
+
+def string_splitter(input_string):
+    #splits the input if it contains a colon
+    split_string = tuple(input_string.split('@'))
+    return split_string
+
+"""the below funtion was taken from Siddesh136, using weather API, the code can be found here:
+   https://github.com/Siddhesh136/Using-Weather-API-in-python/blob/master/weather.py"""
+
+def weather(city):
+    #checks the weather
+        #Next two lines combine to scrape the weather data
+        api_address='http://api.openweathermap.org/data/2.5/weather?appid=7813149bf1ec3b6305f20d6d1ea27982&q='
+        city = input('City Name :')
+        #gets the weather data
+        url = api_address + city
+        json_data = requests.get(url).json()
+        #isolates relevant data
+        weather_info = json_data['weather'][0]['description']
+        print(weather_info)
+        input_string = ''
+        #scrapes website for weather data
+    
+
+def time_check(input_string):
+    #checks the time
+    if 'time' in input_string:
+        out_msg = datetime.today()
+        return out_msg
+    else:
+        return random.choice(UNKNOWN)
+    
+def functions(input_string):
+    #informs user of current functions
+    if 'help' in input_string:
+        out_msg = None
+        print("I am still growing...here are my current functions!\n"
+            "time:\t\t checks the time\n"
+            "schedule:\t checks your schedule\n"
+            "add:\t\t adds to schedule\n"
+            "weather:\t checks the weather")
+    else:
+        out_msg = random.choice(UNKNOWN)
+    return out_msg
+
+#various generic responses for the chatbot
+GREETINGS_IN = ['hello', 'hi', 'hey', 'heyyy', 'hola', 'welcome', 'bonjour', 'greetings']
+UNKNOWN = ['Good.', 'Okay', 'come again?', 'Yeah!', 'Thanks!']
+GREETINGS_OUT = ['Goodbye', 'farewell', 'toodloo', 'see you later alligator', 'sayanara', 'peace out']
+
+def get_input():
+    """ask user for an input message"""
+    
+    msg = input('INPUT :\t')
+    out_msg = None
+    
+    return msg, out_msg
+
+
+def end_chat(input_list):
+    """identify if user says 'quit' in input and end chat"""
+    
+    if 'quit' in input_list:
+        print(random.choice(GREETINGS_OUT))
+        out_msg = ''
+        chat = False
+    else:
+        chat = True
+        out_msg = random.choice(UNKNOWN)
+    return out_msg, chat
+
+def have_a_chat():
+    """Main function to run our chatbot."""
+    chat = True
+    print(random.choice(GREETINGS_IN), ',','enter help if you got any questions ;)')
+    while chat:
+
+        # Get input message from the user
+        msg, out_msg = get_input()
+        
+        #ends the chat
+        out_msg, chat = end_chat(msg)
+        
+        #displays functions
+        out_msg = functions(msg)
+        
+        #checks the time
+        out_msg = time_check(msg)
+        
+        #calls the schedule
+        if is_schedule(msg):
+            out_msg = sch.schedule
+        
+        #adds to the schedule
+        elif is_add(msg):
+            out_msg = 'Please add to schedule in the following format: event @ YYYY-MM-DD HH:MM'
+            global counter
+            counter += 1
+        
+        #asks the user where to check the weather
+        elif is_weather(msg):
+            out_msg = 'Where would you like me to check the weather for?'
+            
+            counter += 2
+            #redirect to weather API
+        
+        elif counter ==1:
+        #if previous user input is add, this takes current input and updates it to the schedule dictionary  
+            entry = string_splitter(msg)
+            key = entry[0]
+            value = entry[1]
+            sch.schedule.update({entry}) 
+            out_msg = 'you have entered {} at {}'.format(key, value)
+            
+            counter -= 1
+            
+        elif counter ==2:
+            #runs weather API
+            weather(msg)
+            
+            counter -= 2
+     
+      
+        #returns output
+        print('OUTPUT:\t', out_msg)
+        
